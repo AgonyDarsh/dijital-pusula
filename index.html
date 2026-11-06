@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dijital Asistanım & Gençlik Destek Platformu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = { darkMode: 'class', theme: { extend: { fontFamily: { sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'] }, colors: { ink: '#15131f', dusk: '#1f1c2e', iris: '#6d4aff', mint: '#2fc98e', sun: '#ffb340' } } } };
+</script>
+<style>
+  body { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+  .mood-btn[aria-pressed="true"] { outline: 3px solid #6d4aff; outline-offset: 2px; transform: scale(1.04); }
+  .bar { transition: height .5s ease, width .5s ease; }
+  :focus-visible { outline: 3px solid #6d4aff; outline-offset: 2px; }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body class="bg-slate-50 text-slate-800 dark:bg-ink dark:text-slate-100 min-h-screen pb-24 md:pb-8">
+
+<header class="sticky top-0 z-20 bg-white/80 dark:bg-ink/80 backdrop-blur border-b border-slate-200 dark:border-white/10">
+  <div class="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-3">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-2xl bg-iris text-white grid place-items-center text-xl">✨</div>
+      <div>
+        <h1 class="font-extrabold leading-tight">Dijital Asistanım</h1>
+        <p class="text-xs text-slate-500 dark:text-slate-400">Gençlik Destek Platformu</p>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <span id="todayLabel" class="hidden sm:block text-sm text-slate-500 dark:text-slate-400"></span>
+      <button id="themeBtn" aria-label="Temayı değiştir" class="w-10 h-10 rounded-xl bg-slate-100 dark:bg-white/10 grid place-items-center hover:bg-slate-200 dark:hover:bg-white/20">
+        <svg id="iconMoon" class="w-5 h-5 dark:hidden" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+        <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path stroke-linecap="round" d="M12 2v2m0 16v2M4.9 4.9l1.4 1.4m11.4 11.4 1.4 1.4M2 12h2m16 0h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </button>
+    </div>
+  </div>
+  <nav id="tabsTop" class="hidden md:flex max-w-5xl mx-auto px-4 gap-2 pb-3" role="tablist"></nav>
+</header>
+
+<nav id="tabsBottom" class="md:hidden fixed bottom-0 inset-x-0 z-20 bg-white dark:bg-dusk border-t border-slate-200 dark:border-white/10 grid grid-cols-4" role="tablist"></nav>
+
+<main class="max-w-5xl mx-auto px-4 py-6">
+
+  <!-- DUYGU -->
+  <section id="tab-mood" class="space-y-6">
+    <div class="rounded-3xl bg-white dark:bg-dusk p-5 sm:p-7 shadow-sm border border-slate-200 dark:border-white/10">
+      <h2 class="text-2xl font-extrabold">Bugün nasıl hissediyorsun?</h2>
+      <p class="text-slate-500 dark:text-slate-400 mt-1">Bir ruh hali seç, istersen kısa bir not ekle.</p>
+      <div id="moodGrid" class="grid grid-cols-3 sm:grid-cols-6 gap-3 mt-5"></div>
+      <textarea id="moodNote" rows="3" maxlength="400" placeholder="Bugün aklından neler geçiyor?" class="mt-5 w-full rounded-2xl bg-slate-50 dark:bg-ink border border-slate-200 dark:border-white/10 p-4 resize-none"></textarea>
+      <div class="flex items-center justify-between mt-3">
+        <span id="moodMsg" class="text-sm text-mint font-semibold" role="status"></span>
+        <button id="saveMood" class="px-5 py-3 rounded-2xl bg-iris text-white font-bold hover:brightness-110">Duygumu kaydet</button>
+      </div>
+    </div>
+    <div class="rounded-3xl bg-white dark:bg-dusk p-5 sm:p-7 shadow-sm border border-slate-200 dark:border-white/10">
+      <h3 class="text-lg font-extrabold mb-4">Geçmiş kayıtlar</h3>
+      <ul id="moodList" class="space-y-3"></ul>
+    </div>
+  </section>
+
+  <!-- HEDEF -->
+  <section id="tab-goals" class="hidden space-y-6">
+    <div class="rounded-3xl bg-white dark:bg-dusk p-5 sm:p-7 shadow-sm border border-slate-200 dark:border-white/10">
+      <h2 class="text-2xl font-extrabold">Hedefler ve alışkanlıklar</h2>
+      <p class="text-slate-500 dark:text-slate-400 mt-1">Küçük adımlar ekle, tamamladıkça işaretle.</p>
+      <form id="goalForm" class="mt-5 flex flex-col sm:flex-row gap-3">
+        <input id="goalText" required maxlength="80" placeholder="Örn. 20 dakika kitap oku" class="flex-1 rounded-2xl bg-slate-50 dark:bg-ink border border-slate-200 dark:border-white/10 px-4 py-3">
+        <select id="goalType" class="rounded-2xl bg-slate-50 dark:bg-ink border border-slate-200 dark:border-white/10 px-4 py-3">
+          <option value="daily">Günlük</option><option value="weekly">Haftalık</option>
+        </select>
+        <input id="goalTime" type="time" aria-label="Alarm saati" title="Alarm saati (isteğe bağlı)" class="rounded-2xl bg-slate-50 dark:bg-ink border border-slate-200 dark:border-white/10 px-4 py-3">
+        <button class="px-5 py-3 rounded-2xl bg-iris text-white font-bold hover:brightness-110">Hedef ekle</button>
+      </form>
+      <p class="mt-3 text-xs text-slate-500 dark:text-slate-400">⏰ Saat seçersen o saatte alarm çalar. Alarm için bu sekmenin açık kalması gerekir.</p>
+      <div class="mt-6">
+        <div class="flex justify-between text-sm font-semibold mb-2"><span>Bugünkü ilerleme</span><span id="goalPct">0%</span></div>
+        <div class="h-3 rounded-full bg-slate-100 dark:bg-white/10 overflow-hidden"><div id="goalBar" class="bar h-full bg-mint rounded-full" style="width:0"></div></div>
+      </div>
+      <ul id="goalList" class="mt-6 space-y-3"></ul>
+    </div>
+  </section>
+
+  <!-- DESTEK -->
+  <section id="tab-support" class="hidden space-y-6">
+    <div class="rounded-3xl bg-sun/20 border border-sun/50 p-5 flex gap-4 items-start">
+      <div class="text-2xl">🚨</div>
+      <div class="text-sm leading-relaxed">
+        <p class="font-extrabold text-base">Acil bir durumdaysan</p>
+        <p>Kendine veya başkasına zarar verme riski varsa hemen <b>112</b>'yi ara. Sosyal destek için <b>ALO 183</b> hattı da ulaşılabilir. Bu sayfa yalnızca bir simülasyondur ve gerçek bir kuruma mesaj göndermez.</p>
+      </div>
+    </div>
+    <div class="grid md:grid-cols-5 gap-6">
+      <form id="ticketForm" class="md:col-span-3 rounded-3xl bg-white dark:bg-dusk p-5 sm:p-7 shadow-sm border border-slate-200 dark:border-white/10 space-y-4">
+        <h2 class="text-2xl font-extrabold">Destek talebi oluştur</h2>
+        <div>
+          <label for="tName" class="text-sm font-semibold">Adın (isteğe bağlı)</label>
+          <input id="tName" maxlength="40" class="mt-1 w-full rounded-2xl bg-slate-50 dark:bg-ink border border-slate-200 dark:border-white/10 px-4 py-3">
+        </div>
+        <div class="grid sm:grid-cols-2 gap-4">
+          <div>
+            <label for="tTarget" class="text-sm font-semibold">Kime ulaşmak istiyorsun?</label>
+            <select id="tTarget" class="mt-1 w-full rounded-2xl bg-slate-50 dark:bg-ink border border-slate-200 dark:border-white/10 px-4 py-3">
+              <option value="rehber">Okul rehberlik birimi</option><option value="ai">Yapay zeka destek hattı</option>
+            </select>
+          </div>
+          <div>
+            <label for="tTopic" class="text-sm font-semibold">Konu</label>
+            <select id="tTopic" class="mt-1 w-full rounded-2xl bg-slate-50 dark:bg-ink border border-slate-200 dark:border-white/10 px-4 py-3">
+              <option>Stres ve kaygı</option><option>Motivasyon</option><option>Sınav ve ders</option><option>Arkadaşlık ilişkileri</option><option>Diğer</option>
+            </select>
+          </div>
+        </div>
+        <fieldset>
+          <legend class="text-sm font-semibold">Aciliyet</legend>
+          <div class="mt-2 flex flex-wrap gap-2" id="urgency"></div>
+        </fieldset>
+        <div>
+          <label for="tMsg" class="text-sm font-semibold">Mesajın</label>
+          <textarea id="tMsg" required minlength="10" maxlength="800" rows="5" placeholder="Neye ihtiyacın olduğunu birkaç cümleyle anlat." class="mt-1 w-full rounded-2xl bg-slate-50 dark:bg-ink border border-slate-200 dark:border-white/10 p-4 resize-none"></textarea>
+        </div>
+        <button class="w-full px-5 py-3 rounded-2xl bg-iris text-white font-bold hover:brightness-110">Talebi gönder</button>
+      </form>
+      <div class="md:col-span-2 rounded-3xl bg-white dark:bg-dusk p-5 sm:p-7 shadow-sm border border-slate-200 dark:border-white/10">
+        <h3 class="text-lg font-extrabold mb-4">Taleplerim</h3>
+        <ul id="ticketList" class="space-y-3"></ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- İSTATİSTİK -->
+  <section id="tab-stats" class="hidden space-y-6">
+    <div class="grid sm:grid-cols-3 gap-4" id="statCards"></div>
+    <div class="rounded-3xl bg-white dark:bg-dusk p-5 sm:p-7 shadow-sm border border-slate-200 dark:border-white/10">
+      <h3 class="text-lg font-extrabold">Haftalık motivasyon</h3>
+      <p class="text-sm text-slate-500 dark:text-slate-400">Her gün için ruh hali ve tamamlanan günlük hedeflerin ortalaması.</p>
+      <div id="weekChart" class="mt-6 grid grid-cols-7 gap-2 items-end h-56"></div>
+    </div>
+    <div class="rounded-3xl bg-white dark:bg-dusk p-5 sm:p-7 shadow-sm border border-slate-200 dark:border-white/10">
+      <h3 class="text-lg font-extrabold mb-4">Duygu dağılımı (son 30 gün)</h3>
+      <div id="moodDist" class="space-y-3"></div>
+    </div>
+  </section>
+</main>
+
+<div id="alarmModal" class="hidden fixed inset-0 z-50 bg-black/60 items-center justify-center p-4" role="alertdialog" aria-labelledby="alarmName">
+  <div class="w-full max-w-sm rounded-3xl bg-white dark:bg-dusk p-7 text-center shadow-2xl">
+    <div class="text-6xl animate-bounce">⏰</div>
+    <p id="alarmTime" class="mt-3 text-sm font-semibold text-iris dark:text-violet-300"></p>
+    <h2 id="alarmName" class="mt-1 text-2xl font-extrabold break-words"></h2>
+    <p class="text-slate-500 dark:text-slate-400 mt-1">Hedefinin zamanı geldi.</p>
+    <div class="mt-6 grid gap-3">
+      <button id="alarmDone" class="px-5 py-3 rounded-2xl bg-mint text-ink font-bold">Tamamladım</button>
+      <button id="alarmSnooze" class="px-5 py-3 rounded-2xl bg-sun text-ink font-bold">10 dakika ertele</button>
+      <button id="alarmStop" class="px-5 py-3 rounded-2xl bg-slate-100 dark:bg-white/10 font-bold">Alarmı kapat</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = s => document.querySelector(s);
+const MOODS = [
+  { id:'mutlu',  label:'Mutlu',  emoji:'😄', score:5, color:'#2fc98e' },
+  { id:'motive', label:'Motive', emoji:'🔥', score:5, color:'#ffb340' },
+  { id:'sakin',  label:'Sakin',  emoji:'😌', score:4, color:'#4fb3d9' },
+  { id:'yorgun', label:'Yorgun', emoji:'😴', score:2, color:'#9a8cc9' },
+  { id:'stresli',label:'Stresli',emoji:'😰', score:2, color:'#ef7a5a' },
+  { id:'uzgun',  label:'Üzgün',  emoji:'😔', score:1, color:'#6d7fcc' }
+];
+const TABS = [
+  { id:'mood', label:'Duygu', icon:'🧠' }, { id:'goals', label:'Hedef', icon:'🎯' },
+  { id:'support', label:'Destek', icon:'💬' }, { id:'stats', label:'İstatistik', icon:'📊' }
+];
+const URG = [{id:'dusuk',label:'Düşük'},{id:'orta',label:'Orta'},{id:'yuksek',label:'Yüksek'}];
+
+// ---- Depolama (güvenli) ----
+const store = {
+  get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} }
+};
+let moods = store.get('da_moods', []), goals = store.get('da_goals', []), tickets = store.get('da_tickets', []);
+let selMood = null, selUrg = 'orta';
+
+// ---- Yardımcılar ----
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const dkey = d => { const x = new Date(d); return x.getFullYear()+'-'+String(x.getMonth()+1).padStart(2,'0')+'-'+String(x.getDate()).padStart(2,'0'); };
+const today = () => dkey(new Date());
+const weekStart = d => { const x = new Date(d); x.setHours(0,0,0,0); x.setDate(x.getDate() - ((x.getDay()+6)%7)); return x; };
+const fmt = d => new Date(d).toLocaleDateString('tr-TR', { day:'numeric', month:'long', weekday:'long' });
+const last7 = () => Array.from({length:7}, (_,i) => { const d = new Date(); d.setDate(d.getDate()-(6-i)); return d; });
+const isDone = (g, dt) => g.type === 'daily' ? g.done.includes(dkey(dt)) : g.done.some(x => weekStart(x).getTime() === weekStart(dt).getTime());
+
+// ---- Tema ----
+function applyTheme(t) { document.documentElement.classList.toggle('dark', t === 'dark'); }
+applyTheme(store.get('da_theme', matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'));
+$('#themeBtn').onclick = () => { const t = document.documentElement.classList.contains('dark') ? 'light' : 'dark'; applyTheme(t); store.set('da_theme', t); };
+$('#todayLabel').textContent = fmt(new Date());
+
+// ---- Sekmeler ----
+function tabBtn(t, bottom) {
+  const b = document.createElement('button');
+  b.dataset.tab = t.id; b.setAttribute('role','tab');
+  b.className = bottom ? 'py-3 flex flex-col items-center gap-0.5 text-xs font-semibold' : 'px-4 py-2 rounded-xl text-sm font-bold flex items-center gap-2';
+  b.innerHTML = `<span class="${bottom?'text-xl':''}">${t.icon}</span><span>${t.label}</span>`;
+  b.onclick = () => showTab(t.id);
+  return b;
+}
+TABS.forEach(t => { $('#tabsTop').append(tabBtn(t,false)); $('#tabsBottom').append(tabBtn(t,true)); });
+function showTab(id) {
+  TABS.forEach(t => $('#tab-'+t.id).classList.toggle('hidden', t.id !== id));
+  document.querySelectorAll('[data-tab]').forEach(b => {
+    const on = b.dataset.tab === id; b.setAttribute('aria-selected', on);
+    b.classList.toggle('bg-iris', on && b.parentElement.id === 'tabsTop');
+    b.classList.toggle('text-white', on && b.parentElement.id === 'tabsTop');
+    b.classList.toggle('text-iris', on && b.parentElement.id === 'tabsBottom');
+    b.classList.toggle('text-slate-500', !on && b.parentElement.id === 'tabsBottom');
+  });
+  if (id === 'stats') renderStats();
+  store.set('da_tab', id);
+}
+
+// ---- Duygu ----
+MOODS.forEach(m => {
+  const b = document.createElement('button');
+  b.className = 'mood-btn rounded-2xl p-3 flex flex-col items-center gap-1 bg-slate-50 dark:bg-ink border border-slate-200 dark:border-white/10 transition';
+  b.setAttribute('aria-pressed','false'); b.dataset.id = m.id;
+  b.innerHTML = `<span class="text-3xl">${m.emoji}</span><span class="text-sm font-semibold">${m.label}</span>`;
+  b.onclick = () => { selMood = m.id; document.querySelectorAll('.mood-btn').forEach(x => x.setAttribute('aria-pressed', x.dataset.id === m.id)); };
+  $('#moodGrid').append(b);
+});
+$('#saveMood').onclick = () => {
+  if (!selMood) { $('#moodMsg').textContent = 'Önce bir ruh hali seç.'; $('#moodMsg').className = 'text-sm text-sun font-semibold'; return; }
+  moods.unshift({ id: Date.now(), mood: selMood, note: $('#moodNote').value.trim(), date: new Date().toISOString() });
+  store.set('da_moods', moods);
+  $('#moodNote').value = ''; selMood = null;
+  document.querySelectorAll('.mood-btn').forEach(x => x.setAttribute('aria-pressed','false'));
+  $('#moodMsg').textContent = 'Kaydedildi.'; $('#moodMsg').className = 'text-sm text-mint font-semibold';
+  renderMoods();
+};
+function renderMoods() {
+  const ul = $('#moodList');
+  if (!moods.length) { ul.innerHTML = '<li class="text-slate-500 dark:text-slate-400">Henüz kayıt yok. Yukarıdan ilk duygunu ekle.</li>'; return; }
+  ul.innerHTML = moods.slice(0,30).map(e => {
+    const m = MOODS.find(x => x.id === e.mood);
+    return `<li class="flex gap-3 items-start p-4 rounded-2xl bg-slate-50 dark:bg-ink border-l-4" style="border-color:${m.color}">
+      <span class="text-2xl">${m.emoji}</span>
+      <div class="flex-1 min-w-0"><p class="font-bold">${m.label} <span class="font-normal text-sm text-slate-500 dark:text-slate-400">· ${fmt(e.date)}, ${new Date(e.date).toLocaleTimeString('tr-TR',{hour:'2-digit',minute:'2-digit'})}</span></p>
+      ${e.note ? `<p class="text-sm mt-1 break-words">${esc(e.note)}</p>` : ''}</div>
+      <button data-del="${e.id}" aria-label="Kaydı sil" class="text-slate-400 hover:text-red-500 p-1">✕</button></li>`;
+  }).join('');
+  ul.querySelectorAll('[data-del]').forEach(b => b.onclick = () => { moods = moods.filter(x => x.id != b.dataset.del); store.set('da_moods', moods); renderMoods(); });
+}
+
+// ---- Hedefler ----
+$('#goalForm').onsubmit = e => {
+  e.preventDefault();
+  const t = $('#goalText').value.trim(); if (!t) return;
+  unlockAudio();
+  const time = $('#goalTime').value;
+  if (time && 'Notification' in window && Notification.permission === 'default') { try { Notification.requestPermission(); } catch {} }
+  goals.push({ id: Date.now(), text: t, type: $('#goalType').value, time, done: [] });
+  store.set('da_goals', goals); $('#goalText').value = ''; $('#goalTime').value = ''; renderGoals();
+};
+function toggleGoal(id) {
+  const g = goals.find(x => x.id === id), now = new Date();
+  if (isDone(g, now)) {
+    g.done = g.done.filter(x => g.type === 'daily' ? x !== today() : weekStart(x).getTime() !== weekStart(now).getTime());
+  } else g.done.push(today());
+  store.set('da_goals', goals); renderGoals();
+}
+function streak(g) {
+  let n = 0; const d = new Date();
+  if (!g.done.includes(dkey(d))) d.setDate(d.getDate()-1);
+  while (g.done.includes(dkey(d))) { n++; d.setDate(d.getDate()-1); }
+  return n;
+}
+function renderGoals() {
+  const now = new Date(), ul = $('#goalList');
+  const done = goals.filter(g => isDone(g, now)).length, pct = goals.length ? Math.round(done/goals.length*100) : 0;
+  $('#goalPct').textContent = `${done}/${goals.length} · %${pct}`; $('#goalBar').style.width = pct+'%';
+  if (!goals.length) { ul.innerHTML = '<li class="text-slate-500 dark:text-slate-400">Henüz hedef yok. Bir tane ekleyerek başla.</li>'; return; }
+  ul.innerHTML = goals.map(g => {
+    const d = isDone(g, now), s = g.type === 'daily' ? streak(g) : 0;
+    return `<li class="flex items-center gap-3 p-4 rounded-2xl bg-slate-50 dark:bg-ink">
+      <input type="checkbox" id="g${g.id}" ${d?'checked':''} data-g="${g.id}" class="w-6 h-6 accent-iris shrink-0 cursor-pointer">
+      <label for="g${g.id}" class="flex-1 min-w-0 cursor-pointer"><span class="${d?'line-through opacity-50':'font-semibold'} break-words">${esc(g.text)}</span>
+        <span class="block text-xs text-slate-500 dark:text-slate-400">${g.type==='daily'?'Günlük':'Haftalık'}${g.time?' · ⏰ '+g.time:''}${s>1?` · 🔥 ${s} gün üst üste`:''}</span></label>
+      <button data-rm="${g.id}" aria-label="Hedefi sil" class="text-slate-400 hover:text-red-500 p-1">✕</button></li>`;
+  }).join('');
+  ul.querySelectorAll('[data-g]').forEach(c => c.onchange = () => toggleGoal(+c.dataset.g));
+  ul.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { goals = goals.filter(x => x.id != b.dataset.rm); store.set('da_goals', goals); renderGoals(); });
+}
+
+// ---- Destek ----
+function renderUrg() {
+  $('#urgency').innerHTML = URG.map(u => `<button type="button" data-u="${u.id}" aria-pressed="${selUrg===u.id}" class="px-4 py-2 rounded-xl text-sm font-bold border border-slate-200 dark:border-white/10 ${selUrg===u.id?'bg-iris text-white border-iris':'bg-slate-50 dark:bg-ink'}">${u.label}</button>`).join('');
+  $('#urgency').querySelectorAll('button').forEach(b => b.onclick = () => { selUrg = b.dataset.u; renderUrg(); });
+}
+const REPLIES = {
+  'Stres ve kaygı': 'Yaşadığın yoğunluğu paylaştığın için teşekkürler. Şimdi 4 saniye nefes al, 4 saniye tut, 6 saniye ver ve bunu beş kez tekrarla. Sonra seni zorlayan şeyi küçük parçalara bölmeyi dene.',
+  'Motivasyon': 'Motivasyon bazen gelmez, küçük bir başlangıçla oluşur. Bugün sadece 10 dakikalık tek bir iş seç ve onu bitir. Bitince Hedef sekmesinde işaretlemeyi unutma.',
+  'Sınav ve ders': 'Konuları önem sırasına diz, 25 dakika çalış ve 5 dakika mola ver. Zorlandığın bir konu varsa öğretmenine veya rehberlik servisine somut bir soruyla gidebilirsin.',
+  'Arkadaşlık ilişkileri': 'İlişkilerde yaşanan gerginlikler çok yorucu olabilir. Duygunu suçlama olmadan, "ben şunu hissettim" diye anlatmayı dene. Güvendiğin bir yetişkinle konuşmak da iyi gelir.',
+  'Diğer': 'Mesajın alındı. Ne hissettiğini yazman ilk adımdı. Güvendiğin biriyle konuşmanı ve gerekirse rehberlik biriminden randevu istemeni öneririm.'
+};
+$('#ticketForm').onsubmit = e => {
+  e.preventDefault();
+  const topic = $('#tTopic').value, target = $('#tTarget').value;
+  const t = { id: Date.now(), code: 'TLP-' + Math.floor(1000 + Math.random()*9000), name: $('#tName').value.trim(), target, topic, urgency: selUrg, msg: $('#tMsg').value.trim(), date: new Date().toISOString(),
+    reply: target === 'ai' ? REPLIES[topic] : null };
+  tickets.unshift(t); store.set('da_tickets', tickets);
+  $('#tMsg').value = ''; renderTickets();
+};
+function renderTickets() {
+  const ul = $('#ticketList');
+  if (!tickets.length) { ul.innerHTML = '<li class="text-slate-500 dark:text-slate-400 text-sm">Henüz talep göndermedin.</li>'; return; }
+  ul.innerHTML = tickets.slice(0,10).map(t => `<li class="p-4 rounded-2xl bg-slate-50 dark:bg-ink text-sm space-y-2">
+    <div class="flex justify-between gap-2"><b>${t.code} · ${esc(t.topic)}</b><span class="text-xs px-2 py-0.5 rounded-full ${t.urgency==='yuksek'?'bg-red-500/15 text-red-500':t.urgency==='orta'?'bg-sun/20 text-amber-600 dark:text-sun':'bg-mint/20 text-emerald-600 dark:text-mint'}">${URG.find(u=>u.id===t.urgency).label}</span></div>
+    <p class="break-words">${esc(t.msg)}</p>
+    ${t.reply ? `<div class="p-3 rounded-xl bg-iris/10"><p class="font-bold text-iris dark:text-violet-300 mb-1">🤖 Yapay zeka asistanı</p><p>${esc(t.reply)}</p></div>`
+      : `<p class="text-slate-500 dark:text-slate-400">Rehberlik birimine iletildi (simülasyon). Dönüş bekleniyor.</p>`}</li>`).join('');
+}
+
+// ---- İstatistik ----
+function dayScore(d) {
+  const k = dkey(d), parts = [];
+  const ms = moods.filter(m => dkey(m.date) === k);
+  if (ms.length) parts.push(ms.reduce((a,m) => a + MOODS.find(x=>x.id===m.mood).score, 0) / ms.length / 5);
+  const daily = goals.filter(g => g.type === 'daily');
+  if (daily.length) parts.push(daily.filter(g => g.done.includes(k)).length / daily.length);
+  return parts.length ? Math.round(parts.reduce((a,b)=>a+b,0)/parts.length*100) : 0;
+}
+function renderStats() {
+  const days = last7(), scores = days.map(dayScore), withData = scores.filter(x => x > 0);
+  const avg = withData.length ? Math.round(withData.reduce((a,b)=>a+b,0)/withData.length) : 0;
+  const now = new Date(), doneN = goals.filter(g => isDone(g, now)).length;
+  const month = moods.filter(m => Date.now() - new Date(m.date) < 30*864e5);
+  const cards = [
+    ['⚡', 'Haftalık motivasyon', '%' + avg, '#6d4aff'],
+    ['🎯', 'Bugün tamamlanan hedef', `${doneN}/${goals.length}`, '#2fc98e'],
+    ['📝', 'Son 30 gündeki kayıt', month.length, '#ffb340']
+  ];
+  $('#statCards').innerHTML = cards.map(c => `<div class="rounded-3xl bg-white dark:bg-dusk p-5 border border-slate-200 dark:border-white/10"><div class="text-2xl">${c[0]}</div><p class="text-3xl font-extrabold mt-2" style="color:${c[3]}">${c[2]}</p><p class="text-sm text-slate-500 dark:text-slate-400">${c[1]}</p></div>`).join('');
+  $('#weekChart').innerHTML = days.map((d,i) => `<div class="flex flex-col items-center justify-end h-full gap-2">
+    <span class="text-xs font-bold">${scores[i] ? '%'+scores[i] : '–'}</span>
+    <div class="w-full flex-1 flex items-end"><div class="bar w-full rounded-t-xl" style="height:${Math.max(scores[i],4)}%;background:${scores[i]>=60?'#2fc98e':scores[i]>=30?'#ffb340':'#9a8cc9'}"></div></div>
+    <span class="text-xs text-slate-500 dark:text-slate-400">${d.toLocaleDateString('tr-TR',{weekday:'short'})}</span></div>`).join('');
+  $('#moodDist').innerHTML = month.length ? MOODS.map(m => {
+    const n = month.filter(x => x.mood === m.id).length, p = Math.round(n/month.length*100);
+    return `<div><div class="flex justify-between text-sm font-semibold mb-1"><span>${m.emoji} ${m.label}</span><span>%${p}</span></div>
+      <div class="h-3 rounded-full bg-slate-100 dark:bg-white/10 overflow-hidden"><div class="bar h-full rounded-full" style="width:${p}%;background:${m.color}"></div></div></div>`;
+  }).join('') : '<p class="text-slate-500 dark:text-slate-400">Dağılımı görmek için birkaç duygu kaydı ekle.</p>';
+}
+
+// ---- Alarm ----
+let actx = null, alarmTimer = null, activeAlarm = null;
+let fired = store.get('da_fired', {});
+fired = Object.fromEntries(Object.entries(fired).filter(([k]) => k.includes('_' + today() + '_')));
+function unlockAudio() { try { actx = actx || new (window.AudioContext || window.webkitAudioContext)(); if (actx.state === 'suspended') actx.resume(); } catch {} }
+document.addEventListener('click', unlockAudio);
+document.addEventListener('keydown', unlockAudio);
+function beep() {
+  if (!actx) return;
+  [0, .25, .5].forEach(t => {
+    const o = actx.createOscillator(), g = actx.createGain(), at = actx.currentTime + t;
+    o.type = 'square'; o.frequency.value = 880;
+    g.gain.setValueAtTime(.15, at); g.gain.exponentialRampToValueAtTime(.001, at + .2);
+    o.connect(g); g.connect(actx.destination); o.start(at); o.stop(at + .2);
+  });
+}
+const hmOf = d => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
+function ringAlarm(g) {
+  activeAlarm = g;
+  $('#alarmName').textContent = g.text;
+  $('#alarmTime').textContent = hmOf(new Date());
+  $('#alarmModal').classList.remove('hidden'); $('#alarmModal').classList.add('flex');
+  beep(); clearInterval(alarmTimer); alarmTimer = setInterval(beep, 1500);
+  try { navigator.vibrate && navigator.vibrate([300, 150, 300]); } catch {}
+  try { if ('Notification' in window && Notification.permission === 'granted') new Notification('⏰ ' + g.text, { body: 'Hedefinin zamanı geldi.' }); } catch {}
+}
+function stopAlarm() {
+  clearInterval(alarmTimer); activeAlarm = null;
+  $('#alarmModal').classList.add('hidden'); $('#alarmModal').classList.remove('flex');
+}
+$('#alarmStop').onclick = stopAlarm;
+$('#alarmDone').onclick = () => { const g = activeAlarm; stopAlarm(); if (g && !isDone(g, new Date())) toggleGoal(g.id); };
+$('#alarmSnooze').onclick = () => {
+  const g = activeAlarm; stopAlarm(); if (!g) return;
+  const d = new Date(Date.now() + 10 * 60000);
+  g.snooze = { day: dkey(d), hm: hmOf(d) }; store.set('da_goals', goals);
+};
+function checkAlarms() {
+  if (activeAlarm) return;
+  const now = new Date(), hm = hmOf(now), k = today();
+  for (const g of goals) {
+    if (!g.time || isDone(g, now)) continue;
+    const trig = g.snooze && g.snooze.day === k ? g.snooze.hm : g.time;
+    const key = g.id + '_' + k + '_' + trig;
+    if (hm === trig && !fired[key]) { fired[key] = true; store.set('da_fired', fired); ringAlarm(g); break; }
+  }
+}
+setInterval(checkAlarms, 1000);
+
+// ---- Başlat ----
+renderMoods(); renderGoals(); renderUrg(); renderTickets();
+showTab(store.get('da_tab', 'mood'));
+</script>
+</body>
+</html>
