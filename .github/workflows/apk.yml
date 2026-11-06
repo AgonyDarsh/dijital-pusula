@@ -8,12 +8,18 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - uses: actions/setup-java@v4
-        with: { distribution: temurin, java-version: 21 }
+        with: { distribution: temurin, java-version: 17 }
+      
+      # Android SDK ortamını otomatik kuran adım
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
       - run: npm install
-      - run: npx cap add android
-      - run: npx capacitor-assets generate --android
+      - run: npx cap add android || true
+      - run: npx capacitor-assets generate --android || true
       - run: npx cap sync android
       - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+      
       - uses: actions/upload-artifact@v4
         with:
           name: dijital-pusula-apk
